@@ -1,0 +1,477 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Lexique Shona</title>
+<meta name="description" content="Lexique shona-français hors ligne : recherche, lettres, thèmes et ajout de mots.">
+<!-- PWA : manifeste, couleur de la barre système, icônes -->
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#2f6b45" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#121815" media="(prefers-color-scheme: dark)">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+<!-- iPhone : appli plein écran depuis « Sur l'écran d'accueil » -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Shona">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,500;7..72,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* Layout : en-tête collant (recherche + lettres + thème), liste groupée par lettre, bouton flottant « Ajouter ». */
+:root{
+  --bg:#f4f6f2; --surface:#ffffff; --ink:#1d2620; --muted:#5d6b61; --line:#d9e0d8;
+  --accent:#2f6b45; --accent-ink:#ffffff; --accent-soft:#e1eee4;
+  --ochre:#8a5d0f; --ochre-soft:#f6ecd6; --warn:#a3361f; --warn-soft:#f8e3dc;
+  --f-head:"Literata", Georgia, "Times New Roman", serif;
+  --f-body:"IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-mono:"IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#121815; --surface:#1a221d; --ink:#e4ebe5; --muted:#9aa89e; --line:#2c3830;
+  --accent:#7cc496; --accent-ink:#0f1a13; --accent-soft:#213528;
+  --ochre:#e0b35a; --ochre-soft:#33291a; --warn:#f08a6f; --warn-soft:#3a2119; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#121815; --surface:#1a221d; --ink:#e4ebe5; --muted:#9aa89e; --line:#2c3830;
+  --accent:#7cc496; --accent-ink:#0f1a13; --accent-soft:#213528;
+  --ochre:#e0b35a; --ochre-soft:#33291a; --warn:#f08a6f; --warn-soft:#3a2119; color-scheme:dark}
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:15px/1.45 var(--f-body)}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+.wrap{max-width:760px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);border-bottom:1px solid var(--line)}
+header.top .wrap{padding-block:12px 10px;display:grid;gap:10px}
+.brand{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
+.brand h1{font:700 22px/1.1 var(--f-head);margin:0;letter-spacing:-.01em}
+.brand h1 span{color:var(--accent)}
+.brand .count{font:500 12px var(--f-mono);color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
+
+.search{position:relative}
+.search input{width:100%;padding:11px 40px 11px 14px;border:1px solid var(--line);border-radius:10px;background:var(--surface);font-size:16px}
+.search input::placeholder{color:var(--muted)}
+.search button{position:absolute;right:6px;top:50%;transform:translateY(-50%);border:0;background:none;color:var(--muted);font-size:20px;line-height:1;padding:6px 8px;cursor:pointer}
+
+.letters{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none;margin-inline:-4px;padding:2px 4px}
+.letters::-webkit-scrollbar{display:none}
+.letters button{flex:0 0 auto;min-width:34px;height:34px;border:1px solid transparent;border-radius:8px;background:none;font:500 15px var(--f-head);cursor:pointer;text-transform:lowercase}
+.letters button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+.letters button:not([aria-pressed="true"]):hover{border-color:var(--line)}
+.letters button.all{font:600 12px var(--f-body);text-transform:none;padding-inline:10px}
+
+.filters{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.filters select{flex:1 1 180px;min-width:0;padding:8px 10px;border:1px solid var(--line);border-radius:8px;background:var(--surface)}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:7px 11px;border:1px solid var(--line);border-radius:999px;background:var(--surface);font-size:13px;cursor:pointer;user-select:none}
+.chip input{accent-color:var(--accent);margin:0}
+
+main .wrap{padding-block:8px 110px}
+.group h2{font:700 30px/1 var(--f-head);color:var(--accent);margin:22px 0 4px;text-transform:lowercase}
+.entry{border-bottom:1px solid var(--line)}
+.entry summary{list-style:none;cursor:pointer;padding:11px 2px;display:grid;gap:3px}
+.entry summary::-webkit-details-marker{display:none}
+.line1{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 8px}
+.hw{font:600 18px/1.2 var(--f-head)}
+.pl{color:var(--muted);font-size:13px}
+.pl b{font-weight:500;color:var(--ink);font-family:var(--f-head)}
+.fr{color:var(--ink)}
+.tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:2px}
+.tag{font:500 11px/1 var(--f-mono);padding:4px 6px;border-radius:5px;background:var(--accent-soft);color:var(--accent);letter-spacing:.02em}
+.tag.cat{background:none;color:var(--muted);padding-inline:0}
+.tag.var{background:var(--warn-soft);color:var(--warn)}
+.tag.reg{background:var(--ochre-soft);color:var(--ochre)}
+.tag.mine{background:var(--accent);color:var(--accent-ink)}
+.flag{color:var(--warn);font-size:12px}
+.detail{padding:2px 2px 14px;display:grid;gap:6px;font-size:14px}
+.detail dl{margin:0;display:grid;grid-template-columns:max-content 1fr;gap:4px 12px}
+.detail dt{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.06em;padding-top:2px}
+.detail dd{margin:0;min-width:0;overflow-wrap:anywhere}
+.detail .actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:4px}
+mark{background:var(--ochre-soft);color:inherit;border-radius:3px;padding:0 1px}
+
+.empty{padding:40px 4px;color:var(--muted);text-align:center}
+.foot{margin-top:28px;padding:14px;border-radius:10px;background:var(--surface);border:1px solid var(--line);font-size:13px;color:var(--muted);display:grid;gap:6px}
+.foot strong{color:var(--ink)}
+
+.btn{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:8px 12px;cursor:pointer;font-size:14px}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent);font-weight:600}
+.btn.danger{color:var(--warn);border-color:var(--warn)}
+.fab{position:fixed;right:calc(16px + env(safe-area-inset-right,0px));bottom:calc(18px + env(safe-area-inset-bottom,0px));z-index:6;border:0;border-radius:999px;padding:14px 20px;background:var(--accent);color:var(--accent-ink);font-weight:600;font-size:15px;box-shadow:0 6px 18px rgba(20,40,28,.25);cursor:pointer}
+
+.sheet{position:fixed;inset:0;z-index:20;background:rgba(10,20,14,.45);display:flex;align-items:flex-end;justify-content:center}
+.panel{width:100%;max-width:560px;max-height:92%;overflow:auto;background:var(--surface);border-radius:16px 16px 0 0;padding:18px max(16px,env(safe-area-inset-right,0px)) calc(18px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));display:grid;gap:12px}
+.panel h2{margin:0;font:700 20px var(--f-head)}
+.panel p.hint{margin:0;color:var(--muted);font-size:13px}
+.form{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.form label{display:grid;gap:4px;font-size:12px;color:var(--muted);min-width:0}
+.form label.full{grid-column:1/-1}
+.form input,.form select,.form textarea{width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);font-size:16px;color:var(--ink)}
+.form textarea{min-height:64px;resize:vertical}
+.panel .row{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+.msg{font-size:13px;color:var(--warn);min-height:1em}
+.store{font-size:12px;color:var(--muted)}
+.export{display:grid;gap:8px}
+.export textarea{width:100%;min-height:140px;font:12px/1.4 var(--f-mono);padding:8px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--ink)}
+@media (max-width:420px){.form{grid-template-columns:1fr}}
+@media (prefers-reduced-motion:no-preference){.entry[open] .detail{animation:fade .15s ease-out}@keyframes fade{from{opacity:.4}to{opacity:1}}}
+/* --- Ajouts propres à la version installable --- */
+html{-webkit-text-size-adjust:100%}
+body{margin:0;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);overscroll-behavior-y:none;-webkit-tap-highlight-color:transparent}
+img{max-width:100%}
+[hidden]{display:none!important}
+.banner{display:flex;align-items:center;gap:10px;justify-content:space-between;padding:8px 12px;border-radius:10px;background:var(--accent-soft);color:var(--ink);font-size:13px}
+.banner .btn{padding:6px 10px;font-size:13px}
+.offline{font:500 11px var(--f-mono);color:var(--ochre)}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <div class="brand">
+      <h1>Lexique <span>Shona</span></h1>
+      <div class="count"><span class="offline" id="offline" hidden>hors ligne · </span><span id="count">…</span></div>
+    </div>
+    <div class="banner" id="updateBanner" hidden>
+      <span>Nouvelle version disponible.</span>
+      <button class="btn primary" type="button" id="reloadBtn">Recharger</button>
+    </div>
+    <div class="banner" id="installBanner" hidden>
+      <span>Installer le lexique sur ce téléphone.</span>
+      <button class="btn primary" type="button" id="installBtn">Installer</button>
+    </div>
+    <div class="search">
+      <input id="q" type="search" placeholder="Chercher en shona ou en français…" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Rechercher">
+      <button id="clearq" type="button" aria-label="Effacer la recherche" hidden>×</button>
+    </div>
+    <nav class="letters" id="letters" aria-label="Filtrer par lettre"></nav>
+    <div class="filters">
+      <select id="theme" aria-label="Thème"></select>
+      <label class="chip"><input type="checkbox" id="zez"> Zezuru seul</label>
+      <label class="chip"><input type="checkbox" id="mine"> Mes ajouts</label>
+    </div>
+  </div>
+</header>
+
+<main>
+  <div class="wrap">
+    <div id="list"><div class="empty">Chargement du lexique…</div></div>
+    <div class="foot">
+      <div><strong>Tons non écrits.</strong> Vérifiez toujours la prononciation à l'audio natif (FSI, tuteur).</div>
+      <div>Toutes les entrées sont « à vérifier ». Fiabilité : tuteur › Hannan / Fortune › FSI › Ruzhowa › Wiktionary. Les badges <span class="tag var">karanga</span> <span class="tag var">manyika</span> signalent une forme hors zezuru ; <span class="flag">⚠</span> une note à contrôler.</div>
+      <div class="export">
+        <div class="row" style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn" type="button" id="exportBtn">Copier mes ajouts (CSV)</button>
+          <button class="btn" type="button" id="downloadBtn">Télécharger le CSV</button>
+        </div>
+        <textarea id="exportOut" readonly hidden aria-label="Ajouts au format CSV"></textarea>
+      </div>
+      <div class="store" id="storeInfo">Vos ajouts sont enregistrés sur ce téléphone. Exportez-les régulièrement pour les reporter dans le lexique du projet.</div>
+      <div class="store" id="dataInfo"></div>
+    </div>
+  </div>
+</main>
+
+<button class="fab" id="addBtn" type="button">+ Ajouter un mot</button>
+
+<div class="sheet" id="sheet" hidden>
+  <form class="panel" id="form" autocomplete="off">
+    <h2 id="formTitle">Nouveau mot</h2>
+    <p class="hint">Notez la segmentation et la classe si vous les connaissez. Statut : à vérifier avec le tuteur.</p>
+    <div class="form">
+      <label>Shona *<input id="f_sn" required placeholder="mot ou radical (-…)"></label>
+      <label>Français *<input id="f_fr" required placeholder="traduction"></label>
+      <label>Pluriel<input id="f_pl" placeholder="forme du pluriel"></label>
+      <label>Classe<input id="f_cl" placeholder="ex. 7/8, 1a"></label>
+      <label>Thème<input id="f_cat" list="cats" placeholder="ex. agriculture"></label>
+      <label>Registre<select id="f_reg"><option>neutre</option><option>respect</option><option>argot</option></select></label>
+      <label>Variété<select id="f_var"><option value="zezuru">zezuru</option><option value="">inconnue</option><option value="karanga">karanga</option><option value="manyika">manyika</option></select></label>
+      <label>Source<input id="f_src" placeholder="terrain, tuteur, FSI U12…"></label>
+      <label class="full">Note<textarea id="f_note" placeholder="Contexte, segmentation, doute…"></textarea></label>
+    </div>
+    <datalist id="cats"></datalist>
+    <div class="msg" id="formMsg" role="status"></div>
+    <div class="row">
+      <button class="btn" type="button" id="cancelBtn">Annuler</button>
+      <button class="btn primary" type="submit" id="saveBtn">Enregistrer</button>
+    </div>
+  </form>
+</div>
+
+<script>
+/* =====================================================================
+   Lexique Shona — version installable (PWA)
+   Données : lexique.json (copie de claude/lexique-shona.csv, colonnes COLS)
+   Ajouts : IndexedDB sur le téléphone (localStorage en secours)
+   ===================================================================== */
+const COLS = ["shona","pluriel","classe","francais","categorie","registre","variete","source","note"];
+let BASE = [];
+const $ = id => document.getElementById(id);
+
+/* ---------- Normalisation pour la recherche ---------- */
+const norm = s => (s || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[’']/g, "'");
+const key = s => norm(s).replace(/^[-\s]+/, "").replace(/[?!.]+$/, "").trim();
+const firstLetter = s => { const k = key(s).replace(/[^a-z]/g, ""); return k ? k[0] : "#"; };
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const reEsc = s => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+function hl(text, q) {
+  if (!q) return esc(text);
+  const n = norm(text), i = n.indexOf(q);
+  if (i < 0) return esc(text);
+  return esc(text.slice(0, i)) + "<mark>" + esc(text.slice(i, i + q.length)) + "</mark>" + esc(text.slice(i + q.length));
+}
+
+/* ---------- État de l'interface ---------- */
+let mine = [];
+const state = { q: "", letter: "", theme: "", zez: false, mineOnly: false, open: null };
+try { const s = JSON.parse(localStorage.getItem("lex-ui") || "{}"); state.zez = !!s.zez; } catch (e) {}
+$("zez").checked = state.zez;
+const all = () => BASE.concat(mine);
+
+/* ---------- Stockage des ajouts : IndexedDB ---------- */
+const Store = (() => {
+  const DB = "lexique-shona", OS = "ajouts", LS = "lex-ajouts";
+  let dbp = null;
+  function open() {
+    if (dbp) return dbp;
+    dbp = new Promise((res, rej) => {
+      if (!("indexedDB" in window)) return rej(new Error("no idb"));
+      const r = indexedDB.open(DB, 1);
+      r.onupgradeneeded = () => r.result.createObjectStore(OS, { keyPath: "id" });
+      r.onsuccess = () => res(r.result);
+      r.onerror = () => rej(r.error);
+    });
+    return dbp;
+  }
+  async function tx(mode, fn) {
+    const db = await open();
+    return new Promise((res, rej) => {
+      const t = db.transaction(OS, mode), s = t.objectStore(OS);
+      const out = fn(s);
+      t.oncomplete = () => res(out && out.result !== undefined ? out.result : undefined);
+      t.onerror = () => rej(t.error);
+    });
+  }
+  const lsGet = () => { try { return JSON.parse(localStorage.getItem(LS) || "[]"); } catch (e) { return []; } };
+  const lsSet = v => { try { localStorage.setItem(LS, JSON.stringify(v)); } catch (e) {} };
+  return {
+    async all() { try { return await tx("readonly", s => s.getAll()) || []; } catch (e) { return lsGet(); } },
+    async put(o) { try { await tx("readwrite", s => s.put(o)); } catch (e) { lsSet(lsGet().filter(x => x.id !== o.id).concat([o])); } },
+    async del(id) { try { await tx("readwrite", s => s.delete(id)); } catch (e) { lsSet(lsGet().filter(x => x.id !== id)); } }
+  };
+})();
+// Demande au navigateur de ne pas effacer les données de l'appli
+if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
+
+function strip(e) { const o = {}; COLS.forEach(c => o[c] = e[c] || ""); o.id = e.id; o.createdAt = e.createdAt || Date.now(); return o; }
+async function reloadMine() {
+  const list = await Store.all();
+  mine = list.map(o => Object.assign({}, o, { mine: true }));
+  buildLetters(); buildThemes(); render();
+}
+
+/* ---------- Filtres : lettres et thèmes ---------- */
+function buildLetters() {
+  const letters = [...new Set(all().map(e => firstLetter(e.shona)))].filter(l => l !== "#").sort();
+  $("letters").innerHTML = `<button type="button" class="all" data-l="" aria-pressed="${!state.letter}">Toutes</button>` +
+    letters.map(l => `<button type="button" data-l="${l}" aria-pressed="${state.letter === l}">${l}</button>`).join("");
+}
+function buildThemes() {
+  const counts = {};
+  all().forEach(e => { const c = e.categorie || "sans thème"; counts[c] = (counts[c] || 0) + 1; });
+  const cats = Object.keys(counts).sort((a, b) => a.localeCompare(b, "fr"));
+  $("theme").innerHTML = `<option value="">Tous les thèmes</option>` +
+    cats.map(c => `<option value="${esc(c)}"${state.theme === c ? " selected" : ""}>${esc(c)} (${counts[c]})</option>`).join("");
+  $("cats").innerHTML = cats.map(c => `<option value="${esc(c)}">`).join("");
+}
+
+/* ---------- Recherche, tri par pertinence et rendu ---------- */
+function score(e, q) {
+  if (!q) return 0;
+  const sn = key(e.shona), pl = norm(e.pluriel), fr = norm(e.francais);
+  if (sn === q) return 0;
+  if (sn.startsWith(q)) return 1;
+  if (fr === q || new RegExp("(^|[^a-z])" + reEsc(q)).test(fr)) return 2;
+  if (sn.includes(q) || pl.includes(q)) return 3;
+  if (fr.includes(q)) return 4;
+  if (norm(e.note).includes(q)) return 5;
+  return -1;
+}
+function visible() {
+  const q = norm(state.q).trim(), out = [];
+  for (const e of all()) {
+    if (state.mineOnly && !e.mine) continue;
+    if (state.letter && firstLetter(e.shona) !== state.letter) continue;
+    if (state.theme && (e.categorie || "sans thème") !== state.theme) continue;
+    if (state.zez && (e.variete === "karanga" || e.variete === "manyika" || e.registre === "argot")) continue;
+    const s = score(e, q);
+    if (s >= 0) out.push([s, e]);
+  }
+  out.sort((a, b) => a[0] - b[0] || key(a[1].shona).localeCompare(key(b[1].shona)));
+  return { q, items: out.map(x => x[1]) };
+}
+function entryHTML(e, q) {
+  const warn = /⚠/.test(e.note) ? ` <span class="flag" title="À contrôler">⚠</span>` : "";
+  const tags = [];
+  if (e.classe) tags.push(`<span class="tag">cl. ${esc(e.classe)}</span>`);
+  if (e.variete === "karanga" || e.variete === "manyika") tags.push(`<span class="tag var">${e.variete}</span>`);
+  if (e.registre && e.registre !== "neutre") tags.push(`<span class="tag reg">${esc(e.registre)}</span>`);
+  if (e.mine) tags.push(`<span class="tag mine">ajout</span>`);
+  if (e.categorie) tags.push(`<span class="tag cat">${esc(e.categorie)}</span>`);
+  const rows = [
+    ["Pluriel", e.pluriel], ["Classe", e.classe], ["Thème", e.categorie], ["Registre", e.registre],
+    ["Variété", e.variete || "non précisée"], ["Source", e.source], ["Note", e.note], ["Statut", "à vérifier"]
+  ].filter(r => r[1]).map(r => `<dt>${r[0]}</dt><dd>${esc(r[1])}</dd>`).join("");
+  const acts = e.mine ? `<div class="actions"><button class="btn" type="button" data-edit="${e.id}">Modifier</button><button class="btn danger" type="button" data-del="${e.id}">Supprimer</button></div>` : "";
+  return `<details class="entry" data-id="${e.id}"${state.open === e.id ? " open" : ""}>
+    <summary><div class="line1"><span class="hw">${hl(e.shona, q)}</span>${e.pluriel ? `<span class="pl">pl. <b>${hl(e.pluriel, q)}</b></span>` : ""}${warn}</div>
+    <div class="fr">${hl(e.francais, q)}</div><div class="tags">${tags.join("")}</div></summary>
+    <div class="detail"><dl>${rows}</dl>${acts}</div></details>`;
+}
+function render() {
+  const { q, items } = visible();
+  $("count").textContent = items.length + (items.length > 1 ? " mots" : " mot");
+  $("clearq").hidden = !state.q;
+  if (!items.length) {
+    $("list").innerHTML = `<div class="empty">Aucun mot ne correspond.<br>Essayez une autre orthographe, retirez un filtre, ou ajoutez-le avec « + Ajouter un mot ».</div>`;
+    return;
+  }
+  let html = "";
+  if (q) html = items.map(e => entryHTML(e, q)).join("");
+  else {                       // sans recherche : groupement par lettre
+    let cur = null;
+    for (const e of items) {
+      const l = firstLetter(e.shona);
+      if (l !== cur) { if (cur !== null) html += "</section>"; html += `<section class="group"><h2>${l}</h2>`; cur = l; }
+      html += entryHTML(e, "");
+    }
+    html += "</section>";
+  }
+  $("list").innerHTML = html;
+}
+
+/* ---------- Événements de filtre ---------- */
+let timer;
+$("q").addEventListener("input", e => { clearTimeout(timer); timer = setTimeout(() => { state.q = e.target.value; if (state.q && state.letter) { state.letter = ""; buildLetters(); } render(); }, 120); });
+$("clearq").addEventListener("click", () => { $("q").value = ""; state.q = ""; render(); $("q").focus(); });
+$("letters").addEventListener("click", e => {
+  const b = e.target.closest("button"); if (!b) return;
+  state.letter = state.letter === b.dataset.l ? "" : b.dataset.l;
+  if (state.letter) { state.q = ""; $("q").value = ""; }
+  buildLetters(); render(); window.scrollTo({ top: 0 });
+});
+$("theme").addEventListener("change", e => { state.theme = e.target.value; render(); });
+$("zez").addEventListener("change", e => { state.zez = e.target.checked; try { localStorage.setItem("lex-ui", JSON.stringify({ zez: state.zez })); } catch (x) {} render(); });
+$("mine").addEventListener("change", e => { state.mineOnly = e.target.checked; render(); });
+$("list").addEventListener("toggle", e => { if (e.target.matches("details")) { if (e.target.open) state.open = e.target.dataset.id; else if (state.open === e.target.dataset.id) state.open = null; } }, true);
+
+/* ---------- Formulaire d'ajout / modification ---------- */
+let editing = null;
+const F = { shona: "f_sn", francais: "f_fr", pluriel: "f_pl", classe: "f_cl", categorie: "f_cat", registre: "f_reg", variete: "f_var", source: "f_src", note: "f_note" };
+function openForm(e) {
+  editing = e || null;
+  $("formTitle").textContent = e ? "Modifier le mot" : "Nouveau mot";
+  for (const [k, id] of Object.entries(F)) $(id).value = e ? (e[k] || "") : ({ registre: "neutre", variete: "zezuru", source: "terrain", shona: state.q }[k] || "");
+  $("formMsg").textContent = "";
+  $("sheet").hidden = false;
+  setTimeout(() => $("f_sn").focus(), 50);
+}
+function closeForm() { $("sheet").hidden = true; editing = null; }
+$("addBtn").addEventListener("click", () => openForm());
+$("cancelBtn").addEventListener("click", closeForm);
+$("sheet").addEventListener("click", e => { if (e.target.id === "sheet") closeForm(); });
+document.addEventListener("keydown", e => { if (e.key === "Escape" && !$("sheet").hidden) closeForm(); });
+
+$("form").addEventListener("submit", async ev => {
+  ev.preventDefault();
+  const o = {};
+  for (const [k, id] of Object.entries(F)) o[k] = $(id).value.trim();
+  if (!o.shona || !o.francais) { $("formMsg").textContent = "Le mot shona et sa traduction sont obligatoires."; return; }
+  o.id = editing ? editing.id : "a" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+  o.createdAt = editing ? (editing.createdAt || Date.now()) : Date.now();
+  $("saveBtn").disabled = true;
+  try {
+    await Store.put(strip(o));
+    state.open = o.id;
+    closeForm();
+    await reloadMine();
+  } catch (err) {
+    $("formMsg").textContent = "Enregistrement impossible. Vérifiez l'espace libre du téléphone puis réessayez.";
+  } finally { $("saveBtn").disabled = false; }
+});
+
+/* Modifier / supprimer (confirmation en deux touches) */
+$("list").addEventListener("click", async e => {
+  const ed = e.target.closest("[data-edit]"), del = e.target.closest("[data-del]");
+  if (ed) { openForm(mine.find(m => m.id === ed.dataset.edit)); return; }
+  if (del) {
+    if (del.dataset.confirm !== "1") { del.dataset.confirm = "1"; del.textContent = "Confirmer la suppression"; return; }
+    await Store.del(del.dataset.del);
+    await reloadMine();
+  }
+});
+
+/* ---------- Export CSV des ajouts (mêmes colonnes que claude/lexique-shona.csv) ---------- */
+function csv() {
+  const cell = v => /[",\n]/.test(v) ? '"' + v.replace(/"/g, '""') + '"' : v;
+  const head = "shona,pluriel,classe,francais,categorie,registre,variete,source,statut,note";
+  const rows = mine.map(m => [m.shona, m.pluriel, m.classe, m.francais, m.categorie, m.registre, m.variete, m.source, "à vérifier", m.note].map(x => cell(x || "")).join(","));
+  return [head].concat(rows).join("\n");
+}
+$("exportBtn").addEventListener("click", async () => {
+  const txt = csv(), out = $("exportOut");
+  out.value = mine.length ? txt : "Aucun ajout pour l'instant.";
+  out.hidden = false;
+  try { await navigator.clipboard.writeText(txt); $("exportBtn").textContent = `Copié (${mine.length} ajout${mine.length > 1 ? "s" : ""})`; }
+  catch (x) { out.focus(); out.select(); $("exportBtn").textContent = "Sélectionné : copiez le texte"; }
+});
+$("downloadBtn").addEventListener("click", () => {
+  const d = new Date().toISOString().slice(0, 10);
+  const blob = new Blob(["﻿" + csv()], { type: "text/csv;charset=utf-8" });   // BOM : accents corrects dans Excel
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob); a.download = `ajouts-lexique-shona-${d}.csv`;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+});
+
+/* ---------- Hors ligne, installation, mises à jour ---------- */
+function netState() { $("offline").hidden = navigator.onLine; }
+addEventListener("online", netState); addEventListener("offline", netState); netState();
+
+// Android / Chrome : bouton « Installer » quand le navigateur le permet
+let installEvt = null;
+addEventListener("beforeinstallprompt", e => { e.preventDefault(); installEvt = e; $("installBanner").hidden = false; });
+$("installBtn").addEventListener("click", async () => { if (!installEvt) return; installEvt.prompt(); await installEvt.userChoice; installEvt = null; $("installBanner").hidden = true; });
+addEventListener("appinstalled", () => { $("installBanner").hidden = true; });
+
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("sw.js").then(reg => {
+    const offer = w => { $("updateBanner").hidden = false; $("reloadBtn").onclick = () => w.postMessage("skipWaiting"); };
+    if (reg.waiting && navigator.serviceWorker.controller) offer(reg.waiting);
+    reg.addEventListener("updatefound", () => {
+      const w = reg.installing;
+      w && w.addEventListener("statechange", () => { if (w.state === "installed" && navigator.serviceWorker.controller) offer(w); });
+    });
+  }).catch(() => {});
+  let reloading = false;
+  navigator.serviceWorker.addEventListener("controllerchange", () => { if (!reloading) { reloading = true; location.reload(); } });
+}
+
+/* ---------- Démarrage : charge le lexique puis les ajouts ---------- */
+(async () => {
+  try {
+    const rows = await (await fetch("lexique.json")).json();
+    BASE = rows.map((r, i) => { const o = {}; COLS.forEach((c, j) => o[c] = r[j] || ""); o.id = "b" + i; o.mine = false; return o; });
+    $("dataInfo").textContent = `Lexique de base : ${BASE.length} entrées (copie du CSV du projet, 17/10/2026).`;
+  } catch (e) {
+    $("list").innerHTML = `<div class="empty">Le lexique n'a pas pu être chargé. Ouvrez l'appli une première fois avec une connexion, puis elle fonctionnera hors ligne.</div>`;    return;
+  }
+  await reloadMine();
+})();
+</script>
+</body>
+</html>
